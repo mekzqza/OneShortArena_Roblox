@@ -26,11 +26,19 @@
       "$className": "ServerScriptService",
       "Tests": {
         "$path": "src/ServerScriptService/Tests"
+      },
+      "Services": {
+        "$path": "src/ServerScriptService/Services"
       }
+
     },
     "StarterPlayer": {
-      "$className": "StarterPlayer"
+      "$className": "StarterPlayer",
+      "StarterCharacterScripts": {
+        "$path": "src/StarterPlayer/Client"
+      }
     },
+
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true
