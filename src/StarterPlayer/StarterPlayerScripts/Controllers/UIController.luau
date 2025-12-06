@@ -1,6 +1,6 @@
 local players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local EventBus = require(ReplicatedStorage:FindFirstChild("Packages"):FindFirstChild("EventBus"))
+local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
 
 local AssetUI = ReplicatedStorage:FindFirstChild("UI")
 local player = players.LocalPlayer
