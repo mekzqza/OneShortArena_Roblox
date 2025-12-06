@@ -1,0 +1,140 @@
+--[[
+	Events.luau - Event Names Constants
+	
+	📌 หน้าที่:
+	เก็บชื่อ Events ทั้งหมดไว้ในที่เดียว เพื่อป้องกันการสะกดผิด
+	และทำให้ง่ายต่อการจัดการและ refactor
+	
+	💡 วิธีใช้:
+	local Events = require(ReplicatedStorage.Shared.Events)
+	EventBus:On(Events.PLAYER_JOINED, function() ... end)
+	EventBus:Emit(Events.PLAYER_JOINED)
+	
+	✅ ข้อดี:
+	- ป้องกันการสะกดผิด (typos)
+	- Auto-complete ใน IDE
+	- ง่ายต่อการ rename/refactor
+	- สามารถเห็นรายการ events ทั้งหมดได้ในที่เดียว
+--]]
+
+local Events = {}
+
+-- ============================================================================
+-- 🎮 Game Events
+-- ============================================================================
+Events.GAME_STARTED = "Game_Started"
+Events.GAME_ENDED = "Game_Ended"
+Events.GAME_PAUSED = "Game_Paused"
+Events.GAME_RESUMED = "Game_Resumed"
+Events.GAME_CLEANUP_COMPLETE = "Game_Cleanup_Complete"
+Events.GAME_START_REQUESTED = "Game_StartRequested"
+
+-- ============================================================================
+-- 👤 Player Events
+-- ============================================================================
+Events.PLAYER_JOINED = "Player_Joined"
+Events.PLAYER_LEFT = "Player_Left"
+Events.PLAYER_DIED = "Player_Died"
+Events.PLAYER_RESPAWNED = "Player_Respawned"
+Events.PLAYER_SCORED = "Player_Scored"
+Events.PLAYER_SELF_SCORED = "Player_SelfScored"
+Events.PLAYER_STATS_UPDATED = "Player_StatsUpdated"
+Events.PLAYER_DAMAGED = "Player_Damaged"
+Events.PLAYER_HEALED = "Player_Healed"
+
+-- ============================================================================
+-- 🖼️ UI Events
+-- ============================================================================
+Events.UI_OPENED = "UI_Opened"
+Events.UI_CLOSED = "UI_Closed"
+Events.TOGGLE_UI = "Toggle_UI"
+Events.UI_SHOW_NOTIFICATION = "UI_ShowNotification"
+Events.UI_UPDATE_SCORE = "UI_UpdateScore"
+Events.UI_UPDATE_HEALTH = "UI_UpdateHealth"
+
+-- ============================================================================
+-- 📢 Notification Events
+-- ============================================================================
+Events.NOTIFICATION_SHOW = "Notification_Show"
+Events.NOTIFICATION_HIDE = "Notification_Hide"
+
+-- ============================================================================
+-- 🎵 Audio Events
+-- ============================================================================
+Events.AUDIO_PLAY = "Audio_Play"
+Events.AUDIO_STOP = "Audio_Stop"
+Events.AUDIO_SET_MUSIC_VOLUME = "Audio_SetMusicVolume"
+Events.AUDIO_SET_SFX_VOLUME = "Audio_SetSFXVolume"
+
+-- ============================================================================
+-- ⚙️ Settings Events
+-- ============================================================================
+Events.SETTINGS_CHANGED = "Settings_Changed"
+Events.SETTINGS_RESET = "Settings_Reset"
+
+-- ============================================================================
+-- ✨ Effect Events
+-- ============================================================================
+Events.EFFECT_SHOW_SCORE_POPUP = "Effect_ShowScorePopup"
+Events.EFFECT_SHOW_DAMAGE = "Effect_ShowDamage"
+Events.EFFECT_SHOW_HEAL = "Effect_ShowHeal"
+
+-- ============================================================================
+-- 📊 Results Events
+-- ============================================================================
+Events.RESULTS_SHOW_WINNER = "Results_ShowWinner"
+Events.RESULTS_SHOW_STATS = "Results_ShowStats"
+
+-- ============================================================================
+-- 🔧 Service/Controller Events
+-- ============================================================================
+Events.SERVICE_READY = "Service_Ready"
+Events.CONTROLLER_READY = "Controller_Ready"
+
+-- ============================================================================
+-- 🐛 Debug Events
+-- ============================================================================
+Events.DEBUG_SHOW_EVENTS = "Debug_ShowEvents"
+Events.DEBUG_TOGGLE = "Debug_Toggle"
+
+-- ============================================================================
+-- 📚 Tutorial Events
+-- ============================================================================
+Events.FIRST_TIME_TUTORIAL = "FirstTime_Tutorial"
+Events.TUTORIAL_STEP_COMPLETE = "Tutorial_StepComplete"
+Events.TUTORIAL_SKIPPED = "Tutorial_Skipped"
+
+--[[
+	GetAllEvents: ดูรายการ Events ทั้งหมด
+	@return table - ตารางที่เก็บชื่อ events ทั้งหมด
+--]]
+function Events.GetAllEvents(): {string}
+	local allEvents = {}
+	for key, value in pairs(Events) do
+		if type(value) == "string" then
+			table.insert(allEvents, value)
+		end
+	end
+	return allEvents
+end
+
+--[[
+	PrintAllEvents: แสดง Events ทั้งหมดใน console
+	ใช้สำหรับ debugging
+--]]
+function Events.PrintAllEvents()
+	local allEvents = Events.GetAllEvents()
+	table.sort(allEvents)
+	
+	print("\n" .. string.rep("=", 60))
+	print("📋 All Available Events (" .. #allEvents .. " total)")
+	print(string.rep("=", 60))
+	
+	for i, eventName in ipairs(allEvents) do
+		print(string.format("%3d. %s", i, eventName))
+	end
+	
+	print(string.rep("=", 60) .. "\n")
+end
+
+return Events

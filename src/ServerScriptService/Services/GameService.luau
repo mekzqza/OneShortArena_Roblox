@@ -13,6 +13,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
+local Events = require(ReplicatedStorage.Shared.Events)
 
 local GameService = {}
 GameService.isGameRunning = false
@@ -26,13 +27,13 @@ function GameService:Init()
 	print("🎮 GameService: Initializing...")
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อเกมเริ่ม (แค่ครั้งเดียว)
-	EventBus:Once("Game_Started", function(gameMode)
+	EventBus:Once(Events.GAME_STARTED, function(gameMode)
 		self.isGameRunning = true
 		print("🎮 Game has started! Mode:", gameMode)
 	end)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อเกมจบ
-	EventBus:On("Game_Ended", function(winner)
+	EventBus:On(Events.GAME_ENDED, function(winner)
 		self.isGameRunning = false
 		print("🎮 Game ended! Winner:", winner or "None")
 		
@@ -41,15 +42,15 @@ function GameService:Init()
 	end)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อผู้เล่นทำคะแนน
-	EventBus:On("Player_Scored", function(playerName, points)
+	EventBus:On(Events.PLAYER_SCORED, function(playerName, points)
 		print("⭐ " .. playerName .. " scored " .. points .. " points!")
 		
 		-- ส่งอีเวนต์อื่นต่อ (Event Chain)
-		EventBus:Emit("Player_StatsUpdated", playerName, { score = points })
+		EventBus:Emit(Events.PLAYER_STATS_UPDATED, playerName, { score = points })
 	end)
 	
 	-- ตัวอย่าง: รับฟังอีเวนต์สำหรับ debug
-	EventBus:On("Debug_ShowEvents", function()
+	EventBus:On(Events.DEBUG_SHOW_EVENTS, function()
 		local events = EventBus:GetEventNames()
 		print("📋 Active Events:", table.concat(events, ", "))
 	end)
@@ -64,7 +65,7 @@ function GameService:Init()
 	end)
 	
 	-- ส่งอีเวนต์ว่า GameService พร้อมแล้ว
-	EventBus:Emit("Service_Ready", "GameService")
+	EventBus:Emit(Events.SERVICE_READY, "GameService")
 	
 	print("✅ GameService initialized.")
 end
@@ -77,7 +78,7 @@ function GameService:OnPlayerJoined(player: Player)
 	print("👋 Player joined:", player.Name)
 	
 	-- ส่งอีเวนต์แจ้งว่ามีผู้เล่นเข้ามา
-	EventBus:Emit("Player_Joined", player.Name, player.UserId)
+	EventBus:Emit(Events.PLAYER_JOINED, player.Name, player.UserId)
 	
 	-- ตัวอย่าง: สร้าง connection เฉพาะสำหรับผู้เล่น
 	local connection = EventBus:On("Player_RequestInfo_" .. player.UserId, function()
@@ -102,7 +103,7 @@ function GameService:OnPlayerLeft(player: Player)
 	print("👋 Player left:", player.Name)
 	
 	-- ส่งอีเวนต์แจ้งว่าผู้เล่นออกไป
-	EventBus:Emit("Player_Left", player.Name, player.UserId)
+	EventBus:Emit(Events.PLAYER_LEFT, player.Name, player.UserId)
 	
 	-- ทำความสะอาด connection ของผู้เล่น
 	local connection = self.playerConnections[player.UserId]
@@ -129,7 +130,7 @@ function GameService:StartGame(gameMode: string)
 	print("🎮 Starting game with mode:", gameMode)
 	
 	-- ส่งอีเวนต์เกมเริ่ม
-	EventBus:Emit("Game_Started", gameMode)
+	EventBus:Emit(Events.GAME_STARTED, gameMode)
 end
 
 --[[
@@ -145,7 +146,7 @@ function GameService:EndGame(winner: string?)
 	print("🎮 Ending game...")
 	
 	-- ส่งอีเวนต์เกมจบ
-	EventBus:Emit("Game_Ended", winner)
+	EventBus:Emit(Events.GAME_ENDED, winner)
 end
 
 --[[
@@ -158,7 +159,7 @@ function GameService:CleanupGame()
 	-- ทำความสะอาดข้อมูลต่างๆ
 	-- (เพิ่มโค้ด cleanup ตามต้องการ)
 	
-	EventBus:Emit("Game_Cleanup_Complete")
+	EventBus:Emit(Events.GAME_CLEANUP_COMPLETE)
 end
 
 return GameService

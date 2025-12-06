@@ -13,6 +13,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
+local Events = require(ReplicatedStorage.Shared.Events)
 
 local player = Players.LocalPlayer
 local GameController = {}
@@ -26,72 +27,72 @@ function GameController:Init()
 	print("🎮 GameController: Initializing...")
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อเกมเริ่ม
-	local gameStartedConn = EventBus:On("Game_Started", function(gameMode)
+	local gameStartedConn = EventBus:On(Events.GAME_STARTED, function(gameMode)
 		print("🎮 [Client] Game started! Mode:", gameMode)
 		
 		-- แจ้ง UI Controller ให้แสดง UI เกม
-		EventBus:Emit("Toggle_UI", "GameHUD", true)
-		EventBus:Emit("Toggle_UI", "MainMenu", false)
+		EventBus:Emit(Events.TOGGLE_UI, "GameHUD", true)
+		EventBus:Emit(Events.TOGGLE_UI, "MainMenu", false)
 		
 		-- เล่นเสียงเริ่มเกม
-		EventBus:Emit("Audio_Play", "GameStartSound")
+		EventBus:Emit(Events.AUDIO_PLAY, "GameStartSound")
 	end)
 	table.insert(self.connections, gameStartedConn)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อเกมจบ
-	local gameEndedConn = EventBus:On("Game_Ended", function(winner)
+	local gameEndedConn = EventBus:On(Events.GAME_ENDED, function(winner)
 		print("🎮 [Client] Game ended! Winner:", winner or "None")
 		
 		-- แสดง UI ผลการเล่น
-		EventBus:Emit("Toggle_UI", "GameHUD", false)
-		EventBus:Emit("Toggle_UI", "ResultsScreen", true)
+		EventBus:Emit(Events.TOGGLE_UI, "GameHUD", false)
+		EventBus:Emit(Events.TOGGLE_UI, "ResultsScreen", true)
 		
 		-- ส่งข้อมูลผู้ชนะไปให้ UI
-		EventBus:Emit("Results_ShowWinner", winner)
+		EventBus:Emit(Events.RESULTS_SHOW_WINNER, winner)
 	end)
 	table.insert(self.connections, gameEndedConn)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อผู้เล่นได้คะแนน
-	local scoreConn = EventBus:On("Player_SelfScored", function(points)
+	local scoreConn = EventBus:On(Events.PLAYER_SELF_SCORED, function(points)
 		print("⭐ [Client] You scored " .. points .. " points!")
 		
 		-- แสดงเอฟเฟกต์ได้คะแนน
-		EventBus:Emit("Effect_ShowScorePopup", points)
+		EventBus:Emit(Events.EFFECT_SHOW_SCORE_POPUP, points)
 		
 		-- เล่นเสียง
-		EventBus:Emit("Audio_Play", "ScoreSound")
+		EventBus:Emit(Events.AUDIO_PLAY, "ScoreSound")
 	end)
 	table.insert(self.connections, scoreConn)
 	
 	-- ตัวอย่าง: ใช้ Once สำหรับอีเวนต์ที่เกิดครั้งเดียว
-	EventBus:Once("FirstTime_Tutorial", function()
+	EventBus:Once(Events.FIRST_TIME_TUTORIAL, function()
 		print("📚 [Client] Showing tutorial...")
-		EventBus:Emit("Toggle_UI", "Tutorial", true)
+		EventBus:Emit(Events.TOGGLE_UI, "Tutorial", true)
 	end)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อมีข้อความแจ้งเตือน
-	local notificationConn = EventBus:On("Notification_Show", function(message, duration)
+	local notificationConn = EventBus:On(Events.NOTIFICATION_SHOW, function(message, duration)
 		print("📢 [Client] Notification:", message)
 		-- ส่งต่อให้ UI Controller จัดการแสดงผล
-		EventBus:Emit("UI_ShowNotification", message, duration or 3)
+		EventBus:Emit(Events.UI_SHOW_NOTIFICATION, message, duration or 3)
 	end)
 	table.insert(self.connections, notificationConn)
 	
 	-- ตัวอย่าง: ฟังอีเวนต์เมื่อมีการเปลี่ยนแปลงการตั้งค่า
-	local settingsConn = EventBus:On("Settings_Changed", function(settingName, value)
+	local settingsConn = EventBus:On(Events.SETTINGS_CHANGED, function(settingName, value)
 		print("⚙️ [Client] Setting changed:", settingName, "=", value)
 		
 		-- จัดการการเปลี่ยนแปลงการตั้งค่า
 		if settingName == "MusicVolume" then
-			EventBus:Emit("Audio_SetMusicVolume", value)
+			EventBus:Emit(Events.AUDIO_SET_MUSIC_VOLUME, value)
 		elseif settingName == "SFXVolume" then
-			EventBus:Emit("Audio_SetSFXVolume", value)
+			EventBus:Emit(Events.AUDIO_SET_SFX_VOLUME, value)
 		end
 	end)
 	table.insert(self.connections, settingsConn)
 	
 	-- ส่งอีเวนต์ว่า GameController พร้อมแล้ว
-	EventBus:Emit("Controller_Ready", "GameController")
+	EventBus:Emit(Events.CONTROLLER_READY, "GameController")
 	
 	-- ตัวอย่าง: แสดง debug info ของ EventBus
 	self:ShowDebugInfo()
@@ -124,7 +125,7 @@ end
 --]]
 function GameController:OnPlayerScored(points: number)
 	-- ส่งอีเวนต์แจ้งระบบอื่นๆ
-	EventBus:Emit("Player_SelfScored", points)
+	EventBus:Emit(Events.PLAYER_SELF_SCORED, points)
 end
 
 --[[
@@ -137,7 +138,7 @@ function GameController:RequestGameStart(gameMode: string)
 	print("🎮 [Client] Requesting game start:", gameMode)
 	
 	-- ส่งอีเวนต์ (ในระบบจริงอาจต้องใช้ RemoteEvent เพื่อสื่อสารกับ Server)
-	EventBus:Emit("Game_StartRequested", gameMode)
+	EventBus:Emit(Events.GAME_START_REQUESTED, gameMode)
 end
 
 --[[
@@ -146,7 +147,7 @@ end
 	@param duration: number? - ระยะเวลาที่แสดง (วินาที)
 --]]
 function GameController:ShowNotification(message: string, duration: number?)
-	EventBus:Emit("Notification_Show", message, duration)
+	EventBus:Emit(Events.NOTIFICATION_SHOW, message, duration)
 end
 
 --[[
