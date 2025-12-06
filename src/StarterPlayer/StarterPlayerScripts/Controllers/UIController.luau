@@ -2,13 +2,13 @@ local players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
 
+
 local AssetUI = ReplicatedStorage:FindFirstChild("UI")
 local player = players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local UIController = {}
 UIController.LoadScreens ={}
-
 function UIController:LoadScreens(screensName:string)
     if self.LoadScreens[screensName] then
         warn("Screen "..screensName.." is already loaded.")
@@ -61,3 +61,5 @@ function UIController:Init()
 
 
 end
+
+return UIController

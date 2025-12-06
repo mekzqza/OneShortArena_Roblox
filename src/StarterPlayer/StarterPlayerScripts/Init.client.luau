@@ -1,26 +1,27 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local controllersFolder = script.Parent:WaitForChild("Controllers")
+local controllersFolder = script.Parent:WaitForChild("Controllers") -- โฟลเดอร์แม่
 
 print("🔌 Client Init: Starting Controllers...")
 
-for _, controllerModule in pairs(controllersFolder:GetChildren()) do
-    if controllerModule:IsA("ModuleScript") then
-        -- ใช้ task.spawn เพื่อแยก Thread (ตัวใครตัวมัน ไม่รอกัน)
+-- แก้ชื่อตัวแปรในลูปจาก controllersFolder เป็น moduleScript
+for _, moduleScript in ipairs(controllersFolder:GetChildren()) do
+    if moduleScript:IsA("ModuleScript") then
         task.spawn(function()
-            local controller = require(controllerModule)
+            -- require ตัวสคริปต์ลูก
+            local controller = require(moduleScript) 
             
-            -- เช็คว่ามีฟังก์ชัน Init ไหม ถ้ามีให้เรียกใช้
             if type(controller.Init) == "function" then
-                -- ใช้ pcall กัน Error พังทั้งระบบ
                 local success, err = pcall(function()
-                    controller:Init() -- แนะนำใช้ : ถ้าออกแบบเป็น OOP/Singleton
+                    controller:Init() 
                 end)
                 
                 if not success then
-                    warn("❌ Failed to init " .. controllerModule.Name .. ": " .. err)
+                    -- เวลา Error จะได้รู้ว่าตัวไหนพัง
+                    warn("❌ Failed to init " .. moduleScript.Name .. ": " .. err) 
                 end
             end
         end)
     end
 end
+
 print("✅ Controllers initialized.")
