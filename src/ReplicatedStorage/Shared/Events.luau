@@ -110,9 +110,24 @@ Events.TUTORIAL_SKIPPED = "Tutorial_Skipped"
 --]]
 function Events.GetAllEvents(): {string}
 	local allEvents = {}
-	-- ใช้ uppercase check เพื่อ filter เฉพาะ constants (ไม่รวม functions)
+	-- รายชื่อฟังก์ชันที่ต้อง exclude
+	local excludedKeys = {
+		"GetAllEvents",
+		"PrintAllEvents"
+	}
+	
+	local function isExcluded(key: string): boolean
+		for _, excludedKey in ipairs(excludedKeys) do
+			if key == excludedKey then
+				return true
+			end
+		end
+		return false
+	end
+	
+	-- เก็บเฉพาะ string values ที่ไม่ใช่ฟังก์ชัน
 	for key, value in pairs(Events) do
-		if type(value) == "string" and string.match(key, "^[A-Z_]+$") then
+		if type(value) == "string" and not isExcluded(key) then
 			table.insert(allEvents, value)
 		end
 	end

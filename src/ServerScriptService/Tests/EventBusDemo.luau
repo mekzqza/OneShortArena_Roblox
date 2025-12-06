@@ -7,8 +7,13 @@
 	
 	⚠️ หมายเหตุ:
 	- นี่เป็นไฟล์ demo/test เท่านั้น ไม่ใช่ unit test แบบเต็มรูปแบบ
-	- ใช้ task.wait() เพื่อให้ events มีเวลา process (อาจต้องเพิ่มเวลาในระบบที่ช้า)
+	- ใช้ task.wait() เพื่อให้ events มีเวลา process
+	- หากทดสอบใน environment ที่ช้า อาจต้องเพิ่มค่า wait time
+	- สำหรับ production ควรใช้ event-based synchronization แทน timing-based
 --]]
+
+-- ค่าคงที่สำหรับ timing (สามารถปรับได้ตาม environment)
+local WAIT_TIME = 0.1 -- เพิ่มค่านี้หากทดสอบในระบบที่ช้า
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
@@ -53,9 +58,9 @@ EventBus:Once("Test_Once", function()
 end)
 
 EventBus:Emit("Test_Once")
-task.wait(0.1) -- รอให้ event ถูก process
+task.wait(WAIT_TIME) -- รอให้ event ถูก process
 EventBus:Emit("Test_Once") -- This should NOT fire
-task.wait(0.1) -- รอให้แน่ใจว่าไม่มี event เพิ่ม
+task.wait(WAIT_TIME) -- รอให้แน่ใจว่าไม่มี event เพิ่ม
 
 assert(onceCounter == 1, "❌ Test 3 failed: Once fired " .. onceCounter .. " times instead of 1")
 print("✅ Test 3 passed (fired exactly once)\n")
@@ -83,7 +88,7 @@ EventBus:On("Test_MultipleListeners", function()
 end)
 
 EventBus:Emit("Test_MultipleListeners")
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 assert(listener1Fired and listener2Fired and listener3Fired, 
 	"❌ Test 4 failed: Not all listeners fired")
@@ -99,13 +104,13 @@ local connToDisconnect = EventBus:On("Test_Disconnect", function()
 end)
 
 EventBus:Emit("Test_Disconnect") -- Should fire (count: 1)
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 connToDisconnect:Disconnect() -- Disconnect now
 print("🔌 Connection disconnected")
 
 EventBus:Emit("Test_Disconnect") -- Should NOT fire
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 assert(disconnectCounter == 1, "❌ Test 5 failed: Event fired after disconnect")
 print("✅ Test 5 passed (event stopped after disconnect)\n")
@@ -122,7 +127,7 @@ EventBus:On("Test_Off", function()
 end)
 
 EventBus:Emit("Test_Off") -- Both should fire (count: 2)
-task.wait(0.1)
+task.wait(WAIT_TIME)
 print("✅ Before Off: count =", offCounter)
 
 EventBus:Off("Test_Off") -- Remove all listeners
@@ -130,7 +135,7 @@ print("🔌 Called EventBus:Off('Test_Off')")
 
 local countBeforeOff = offCounter
 EventBus:Emit("Test_Off") -- Should NOT fire
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 assert(offCounter == countBeforeOff, "❌ Test 6 failed: Events still fired after Off")
 print("✅ Test 6 passed (all listeners removed)\n")
@@ -170,7 +175,7 @@ EventBus:On("Test_Error", function()
 end)
 
 EventBus:Emit("Test_Error")
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 assert(errorTestPassed, "❌ Test 8 failed: Error in one listener stopped others")
 print("✅ Test 8 passed (error handling works)\n")
@@ -184,7 +189,7 @@ EventBus:On("Test_Clear_2", function() clearTestCounter = clearTestCounter + 1 e
 
 EventBus:Emit("Test_Clear_1")
 EventBus:Emit("Test_Clear_2")
-task.wait(0.1)
+task.wait(WAIT_TIME)
 print("✅ Before Clear: count =", clearTestCounter)
 
 local countBeforeClear = clearTestCounter
@@ -193,7 +198,7 @@ print("🧹 Called EventBus:Clear()")
 
 EventBus:Emit("Test_Clear_1")
 EventBus:Emit("Test_Clear_2")
-task.wait(0.1)
+task.wait(WAIT_TIME)
 
 assert(clearTestCounter == countBeforeClear, "❌ Test 9 failed: Events still fired after Clear")
 print("✅ Test 9 passed (all events cleared)\n")

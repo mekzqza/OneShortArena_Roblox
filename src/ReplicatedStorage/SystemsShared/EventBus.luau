@@ -183,14 +183,14 @@ end
 	EventBus:Clear()
 --]]
 function EventBus:Clear()
-	-- วนลบทุก signal
+	-- วนลบทุก signal และล้าง reference ในตาราง
 	for eventName, signal in pairs(EventBus.signals) do
 		if signal then
 			signal:Destroy()
 		end
+		-- ล้าง reference ทันที
+		EventBus.signals[eventName] = nil
 	end
-	-- ล้างตาราง
-	EventBus.signals = {}
 end
 
 --[[
