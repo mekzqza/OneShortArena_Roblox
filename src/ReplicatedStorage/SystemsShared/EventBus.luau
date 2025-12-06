@@ -2,7 +2,13 @@
 -- EventBus Module
 
 local EventBus = {}
-EventBus.signals = {}
+EventBus._signals = {}
+
+type  EventBusType = {
+    On: (eventName: string, callback: () -> ()) -> RBXScriptConnection,
+    Emit: (eventName: string, ...any) -> (),
+    Once: (eventName: string, callback: () -> ()) -> (),
+}
 
 local function getSignal(eventName: string): Instance
     if not EventBus.signals[eventName] then
@@ -11,17 +17,19 @@ local function getSignal(eventName: string): Instance
     return EventBus.signals[eventName]
 end
 
+ --ฟังก์ชันสำหรับสมัครรับเหตุการณ์
 function EventBus.On(eventName: string, callback: () -> ())
     local signal = getSignal(eventName)
     return signal.Event:Connect(callback)
 end
 
+--ฟังก์ชันสำหรับส่งเหตุการณ์
 function EventBus.Emit(eventName: string, ...)
     local signal = getSignal(eventName)
     signal:Fire(...)
 end
 
-function Once(eventName: string, callback: () -> ())
+function EventBus.Once(eventName: string, callback: () -> ())
     local connection
     connection = EventBus.On(eventName, function(...)
         if connection then
@@ -30,6 +38,6 @@ function Once(eventName: string, callback: () -> ())
         end
         callback(...)
     end)
-    
 end
+
 return EventBus
