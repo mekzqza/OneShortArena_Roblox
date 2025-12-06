@@ -105,18 +105,19 @@ end
 	ใช้สำหรับ development เพื่อดูว่ามี events อะไรอยู่ในระบบบ้าง
 --]]
 function GameController:ShowDebugInfo()
-	-- รอสักครู่เพื่อให้ controllers อื่นๆ ลงทะเบียนก่อน
-	task.wait(1)
-	
-	local events = EventBus:GetEventNames()
-	if #events > 0 then
-		print("📋 [GameController] Active EventBus Events:")
-		for _, eventName in ipairs(events) do
-			print("   -", eventName)
+	-- ใช้ task.defer เพื่อให้ controllers อื่นๆ มีโอกาสลงทะเบียนก่อน
+	-- ไม่ใช้เวลาคงที่เพื่อป้องกัน timing issues
+	task.defer(function()
+		local events = EventBus:GetEventNames()
+		if #events > 0 then
+			print("📋 [GameController] Active EventBus Events:")
+			for _, eventName in ipairs(events) do
+				print("   -", eventName)
+			end
+		else
+			print("📋 [GameController] No active events in EventBus")
 		end
-	else
-		print("📋 [GameController] No active events in EventBus")
-	end
+	end)
 end
 
 --[[

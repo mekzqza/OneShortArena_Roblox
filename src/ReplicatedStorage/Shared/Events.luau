@@ -110,8 +110,9 @@ Events.TUTORIAL_SKIPPED = "Tutorial_Skipped"
 --]]
 function Events.GetAllEvents(): {string}
 	local allEvents = {}
+	-- ใช้ uppercase check เพื่อ filter เฉพาะ constants (ไม่รวม functions)
 	for key, value in pairs(Events) do
-		if type(value) == "string" then
+		if type(value) == "string" and string.match(key, "^[A-Z_]+$") then
 			table.insert(allEvents, value)
 		end
 	end

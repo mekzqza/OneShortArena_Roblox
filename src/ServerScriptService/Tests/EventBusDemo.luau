@@ -6,7 +6,8 @@
 	สามารถรันไฟล์นี้เพื่อดูผลลัพธ์ของ EventBus ได้
 	
 	⚠️ หมายเหตุ:
-	นี่เป็นไฟล์ demo/test เท่านั้น ไม่ใช่ unit test แบบเต็มรูปแบบ
+	- นี่เป็นไฟล์ demo/test เท่านั้น ไม่ใช่ unit test แบบเต็มรูปแบบ
+	- ใช้ task.wait() เพื่อให้ events มีเวลา process (อาจต้องเพิ่มเวลาในระบบที่ช้า)
 --]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -52,9 +53,9 @@ EventBus:Once("Test_Once", function()
 end)
 
 EventBus:Emit("Test_Once")
-task.wait(0.1)
+task.wait(0.1) -- รอให้ event ถูก process
 EventBus:Emit("Test_Once") -- This should NOT fire
-task.wait(0.1)
+task.wait(0.1) -- รอให้แน่ใจว่าไม่มี event เพิ่ม
 
 assert(onceCounter == 1, "❌ Test 3 failed: Once fired " .. onceCounter .. " times instead of 1")
 print("✅ Test 3 passed (fired exactly once)\n")

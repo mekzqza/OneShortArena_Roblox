@@ -108,13 +108,23 @@ function EventBus:Once(eventName: string, callback: EventCallback): EventConnect
 	assert(type(eventName) == "string", "eventName must be a string")
 	assert(type(callback) == "function", "callback must be a function")
 	
+	-- ใช้ flag เพื่อป้องกัน race condition
+	local hasBeenCalled = false
 	local connection
+	
 	connection = self:On(eventName, function(...)
-		-- ถอนการเชื่อมต่อทันทีที่ถูกเรียก
+		-- ตรวจสอบว่าถูกเรียกไปแล้วหรือยัง (thread-safe)
+		if hasBeenCalled then
+			return
+		end
+		hasBeenCalled = true
+		
+		-- ถอนการเชื่อมต่อ
 		if connection then
 			connection:Disconnect()
 			connection = nil
 		end
+		
 		-- เรียก callback พร้อมส่งต่อ arguments ทั้งหมด
 		callback(...)
 	end)
@@ -134,16 +144,11 @@ end
 function EventBus:Emit(eventName: string, ...: any)
 	assert(type(eventName) == "string", "eventName must be a string")
 	
-	-- ใช้ pcall เพื่อป้องกัน error จาก event หนึ่งไปกระทบ event อื่น
 	local signal = EventBus.signals[eventName]
 	if signal then
-		local success, err = pcall(function(...)
-			signal:Fire(...)
-		end, ...)
-		
-		if not success then
-			warn(string.format("⚠️ EventBus Error [%s]: %s", eventName, tostring(err)))
-		end
+		-- Fire ตรงๆ เพราะ BindableEvent มี error handling ภายในอยู่แล้ว
+		-- Listener แต่ละตัวจะ run แยกกัน ถ้า listener ตัวหนึ่ง error จะไม่กระทบตัวอื่น
+		signal:Fire(...)
 	end
 	-- ถ้าไม่มี signal ก็ไม่ต้องทำอะไร (ไม่มีใครสมัครรับฟัง)
 end
