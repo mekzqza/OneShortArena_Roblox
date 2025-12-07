@@ -25,6 +25,8 @@ local NetworkHandler: NetworkHandler = {}
 local REMOTE_FOLDER_NAME = "Network"
 local REMOTE_EVENT_NAME = "NetworkBridge"
 
+-- Runtime config (can be tuned via :Configure)
+local DEBUG = false
 local RATE_LIMIT_WINDOW = 2 -- seconds
 local MAX_EVENTS_PER_WINDOW = 10 -- per player per window
 local MAX_STRING_LENGTH = 500
@@ -33,6 +35,7 @@ local MAX_DEPTH = 3
 
 local clientRate: {[number]: {t: number, count: number}} = {}
 local remoteEvent: RemoteEvent
+local validators: {[string]: (Player, {any}) -> (boolean, string?)} = {}
 
 -- Allowlists to control what can traverse the bridge
 local CLIENT_TO_SERVER_ALLOW = {
@@ -47,6 +50,12 @@ local SERVER_TO_CLIENT_ALLOW = {
 	[Events.UI_UPDATE_HEALTH] = true,
 	[Events.RESULTS_SHOW_WINNER] = true,
 }
+
+local function log(...: any)
+    if DEBUG then
+        print("[NetworkHandler]", ...)
+    end
+end
 
 local function isPayloadSafe(value: any, depth: number): boolean
 	if depth > MAX_DEPTH then
@@ -137,11 +146,13 @@ local function forwardToClients(eventName: string, ...: any)
 		packed[1] = nil
 		local ok, args = sanitizeArgs(table.unpack(packed, 2, packed.n))
 		if ok then
+			log("-> FireClient", first.Name, eventName)
 			remoteEvent:FireClient(first, eventName, table.unpack(args, 1, #args))
 		end
 	else
 		local ok, args = sanitizeArgs(table.unpack(packed, 1, packed.n))
 		if ok then
+			log("-> FireAllClients", eventName)
 			remoteEvent:FireAllClients(eventName, table.unpack(args, 1, #args))
 		end
 	end
@@ -165,6 +176,17 @@ local function handleClientEvent(player: Player, eventName: string, ...: any)
 		return
 	end
 
+	-- Per-event validator (optional)
+	local validator = validators[eventName]
+	if validator then
+		local passed, reason = validator(player, args)
+		if not passed then
+			warn(string.format("[NetworkHandler] Validator rejected '%s' from %s: %s", eventName, player.Name, tostring(reason)))
+			return
+		end
+	end
+
+	log("<- From", player.Name, eventName)
 	EventBus:Emit(eventName, player, table.unpack(args, 1, #args))
 end
 
@@ -197,6 +219,31 @@ end
 
 function NetworkHandler:Broadcast(eventName: string, ...: any)
 	forwardToClients(eventName, ...)
+end
+
+-- Configure runtime settings
+function NetworkHandler:Configure(opts: {rateWindow: number?, maxPerWindow: number?, debug: boolean?})
+	if opts.rateWindow ~= nil then RATE_LIMIT_WINDOW = opts.rateWindow end
+	if opts.maxPerWindow ~= nil then MAX_EVENTS_PER_WINDOW = opts.maxPerWindow end
+	if opts.debug ~= nil then DEBUG = opts.debug end
+end
+
+-- Register per-event validator for client->server events
+function NetworkHandler:RegisterValidator(eventName: string, fn: (Player, {any}) -> (boolean, string?))
+	if CLIENT_TO_SERVER_ALLOW[eventName] then
+		validators[eventName] = fn
+	else
+		warn(string.format("[NetworkHandler] Cannot register validator for disallowed event '%s'", eventName))
+	end
+end
+
+-- Dynamically allow additional events (use cautiously; prefer editing allowlist)
+function NetworkHandler:AllowClientEvent(eventName: string)
+	CLIENT_TO_SERVER_ALLOW[eventName] = true
+end
+
+function NetworkHandler:AllowServerEvent(eventName: string)
+	SERVER_TO_CLIENT_ALLOW[eventName] = true
 end
 
 return NetworkHandler
