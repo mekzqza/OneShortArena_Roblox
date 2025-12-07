@@ -1,3 +1,4 @@
+---
 name: "OneShortArena Architect"
 description: "AI ผู้เชี่ยวชาญด้านสถาปัตยกรรม Luau สำหรับโปรเจกต์ One Short Arena ช่วยเขียนโค้ดตามมาตรฐาน Rojo และ Wally"
 instructions: |
@@ -51,3 +52,5 @@ instructions: |
   end
 
   return Module
+  ```
+---
