@@ -14,6 +14,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
 local Events = require(ReplicatedStorage.Shared.Events)
+local ControllersFolder = script.Parent
+local NetworkController = require(ControllersFolder:WaitForChild("NetworkController"))
 
 local player = Players.LocalPlayer
 local GameController = {}
@@ -138,9 +140,9 @@ end
 --]]
 function GameController:RequestGameStart(gameMode: string)
 	print("🎮 [Client] Requesting game start:", gameMode)
-	
-	-- ส่งอีเวนต์ (ในระบบจริงอาจต้องใช้ RemoteEvent เพื่อสื่อสารกับ Server)
-	EventBus:Emit(Events.GAME_START_REQUESTED, gameMode)
+    
+	-- ส่งไป Server ผ่าน NetworkController (RemoteEvent bridge)
+	NetworkController:Send(Events.GAME_START_REQUESTED, gameMode)
 end
 
 --[[
