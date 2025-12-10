@@ -54,6 +54,10 @@ function GameService:Init()
 		local events = EventBus:GetEventNames()
 		print("📋 Active Events:", table.concat(events, ", "))
 	end)
+
+	EventBus:On(Events.INPUT_ACTION, function(actionId)
+	    print("🕹️ Input action received on server:", actionId)
+	end)
 	
 	-- เชื่อมต่อกับ Players service
 	Players.PlayerAdded:Connect(function(player)

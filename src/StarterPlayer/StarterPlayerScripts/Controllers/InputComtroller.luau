@@ -1,18 +1,55 @@
-local ContexAcctionService = game:GetService("ContextActionService")
+--!strict
+
+local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local EventBus = require(ReplicatedStorage.SystemsShared.EventBus)
 local Events = require(ReplicatedStorage.Shared.Events)
-local InputSettings=require(ReplicatedStorage.Shared.InputSettings)
+local InputSettings = require(ReplicatedStorage.Shared.InputSettings)
 
-local InputComtroller = {}
+export type ModuleImpl = {
+	Init: (self: ModuleImpl) -> (),
+	Start: (self: ModuleImpl) -> (),
+	BindAllActions: (self: ModuleImpl) -> (),
+	UnbindAll: (self: ModuleImpl) -> (),
+	[string]: any,
+}
 
-local function handlerInput(actionName: string, inputState: Enum.UserInputState, inputObject: InputObject)
-    if inputState == Enum.UserInputState.Begin then
-        EventBus:Emit(Events.INPUT_ACTION_TRIGGERED, actionName, inputObject)
-    end
-    
-end 
+local InputController: ModuleImpl = {}
 
+local EVENT_INPUT_ACTION = (Events :: any).INPUT_ACTION or "Input_Action"
 
-return InputComtroller
+local function onInput(actionName: string, inputState: Enum.UserInputState, _inputObject: InputObject?)
+	if inputState == Enum.UserInputState.Begin then
+		EventBus:Emit(EVENT_INPUT_ACTION, actionName)
+	end
+end
+
+function InputController:Init()
+	-- Bind immediately so input works as soon as controllers load
+	self:BindAllActions()
+	print("🎮 InputController initialized and bindings applied")
+end
+
+function InputController:Start()
+	-- No-op; bindings done in Init
+end
+
+function InputController:BindAllActions()
+	for actionName, keys in pairs(InputSettings.Bindings) do
+		ContextActionService:BindAction(actionName, onInput, true, table.unpack(keys))
+
+		local title = InputSettings.MobileButtonNames[actionName]
+		if title then
+			ContextActionService:SetTitle(actionName, title)
+		end
+	end
+end
+
+function InputController:UnbindAll()
+	for actionName, _ in pairs(InputSettings.Bindings) do
+		ContextActionService:UnbindAction(actionName)
+	end
+end
+
+return InputController
