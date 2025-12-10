@@ -42,6 +42,7 @@ local CLIENT_TO_SERVER_ALLOW = {
 	[Events.TOGGLE_UI] = true,
 	[Events.GAME_START_REQUESTED] = true,
 	[Events.SETTINGS_CHANGED] = true,
+	[Events.INPUT_ACTION] = true,
 }
 
 local SERVER_TO_CLIENT_ALLOW = {
